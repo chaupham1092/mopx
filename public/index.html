@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Search Insights</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { padding: 10px; margin: 10px 0; }
+    #results { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Local Search Insights</h1>
+  <label for="keyword">Enter Keyword (e.g., "plumber in New York"):</label>
+  <input type="text" id="keyword" placeholder="Enter Keyword" required>
+  
+  <label for="location">Enter Your Location (City, Country):</label>
+  <input type="text" id="location" placeholder="City, Country" required>
+
+  <button id="checkPerformanceBtn">Check Local Performance</button>
+
+  <div id="results"></div>
+
+  <script>
+    document.getElementById('checkPerformanceBtn').addEventListener('click', function() {
+      const keyword = document.getElementById('keyword').value;
+      const location = document.getElementById('location').value;
+
+      if (keyword && location) {
+        fetch(`/api/check-performance?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              let resultHTML = `<h2>Performance Results</h2><p>For Keyword: ${keyword} in ${location}</p>`;
+              resultHTML += `<p>Your website is ranked at position: ${data.rank}</p>`;
+              resultHTML += `<p>Competitor rankings:</p><ul>`;
+              data.competitors.forEach(comp => {
+                resultHTML += `<li>${comp.name}: Rank ${comp.rank}</li>`;
+              });
+              resultHTML += `</ul>`;
+              document.getElementById('results').innerHTML = resultHTML;
+            } else {
+              document.getElementById('results').innerHTML = `<p>No results found.</p>`;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('results').innerHTML = `<p>Error fetching data. Please try again later.</p>`;
+          });
+      } else {
+        alert("Please enter both keyword and location.");
+      }
+    });
+  </script>
+</body>
+</html>
