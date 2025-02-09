@@ -1,29 +1,13 @@
-// Function to load and parse CSV data from the provided URL
-function loadCSV() {
-    const csvUrl = 'https://catalog.ourworldindata.org/explorers/who/latest/monkeypox/monkeypox.csv';
-    
-    fetch(csvUrl)
-        .then(response => response.text())
+const apiUrl = 'https://monkeypox-api.onrender.com/monkeypox-data'; // Replace with your Render URL
+
+// Function to fetch processed data from backend
+function fetchData() {
+    fetch(apiUrl)
+        .then(response => response.json())
         .then(data => {
-            const rows = data.split('\n');
-            const dates = [];
-            const totalCases = [];
-
-            // Skip the first line (header) and loop through each row
-            rows.slice(1).forEach(row => {
-                const cells = row.split(',');
-
-                // Check if the row contains data and filter for world-level data (not Africa)
-                if (cells.length > 1 && cells[0] !== 'Africa') {  // Filter for world-level data
-                    dates.push(cells[1]);
-                    totalCases.push(Number(cells[3]));  // Total cases column
-                }
-            });
-
-            // Create chart with the parsed data
-            createChart(dates, totalCases);
+            createChart(data.dates, data.totalCases);
         })
-        .catch(error => console.error('Error loading CSV data:', error));
+        .catch(error => console.error('Error fetching data:', error));
 }
 
 // Function to create the chart
@@ -59,7 +43,6 @@ function createChart(dates, totalCases) {
             },
             scales: {
                 x: {
-                    type: 'category',
                     title: {
                         display: true,
                         text: 'Date'
@@ -74,11 +57,10 @@ function createChart(dates, totalCases) {
                         display: true,
                         text: 'Total Cases'
                     },
-                    type: 'logarithmic',  // Apply logarithmic scale
+                    type: 'logarithmic', // Log scale for better visualization
                     ticks: {
-                        // Optional: Customize tick marks
-                        callback: function(value, index, values) {
-                            return value.toLocaleString();  // Format tick labels with commas
+                        callback: function(value) {
+                            return value.toLocaleString();
                         }
                     }
                 }
@@ -87,5 +69,5 @@ function createChart(dates, totalCases) {
     });
 }
 
-// Load the CSV data on page load
-window.onload = loadCSV;
+// Load the data on page load
+window.onload = fetchData;

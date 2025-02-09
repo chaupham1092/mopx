@@ -1,34 +1,43 @@
 const express = require('express');
 const axios = require('axios');
 const Papa = require('papaparse');
+const cors = require('cors'); // Allow frontend requests
+
 const app = express();
+app.use(cors()); // Enable CORS for all routes
 
 const csvUrl = 'https://catalog.ourworldindata.org/explorers/who/latest/monkeypox/monkeypox.csv';
 
-// Endpoint to fetch the data and process it
+// API endpoint to serve processed data
 app.get('/monkeypox-data', async (req, res) => {
     try {
         const response = await axios.get(csvUrl);
         const csvData = response.data;
 
-        // Parse CSV data
         Papa.parse(csvData, {
+            header: true,
             complete: (result) => {
-                const dates = [];
-                const totalCases = [];
-
-                // Process the CSV data (filter for non-Africa data)
+                const processedData = {};
+                
+                // Process the CSV data (grouping by date)
                 result.data.forEach(row => {
-                    if (row.location !== 'Africa') {  // Skip Africa
-                        dates.push(row.date);
-                        totalCases.push(Number(row.total_cases));
+                    if (row.location !== 'Africa') { // Filter out Africa
+                        const date = row.date;
+                        const cases = Number(row.total_cases) || 0;
+
+                        if (!processedData[date]) {
+                            processedData[date] = 0;
+                        }
+                        processedData[date] += cases; // Sum cases for each date
                     }
                 });
 
-                // Send processed data as JSON
+                // Convert object to array
+                const dates = Object.keys(processedData);
+                const totalCases = dates.map(date => processedData[date]);
+
                 res.json({ dates, totalCases });
-            },
-            header: true
+            }
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch data' });
@@ -36,6 +45,7 @@ app.get('/monkeypox-data', async (req, res) => {
 });
 
 // Start the server
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
