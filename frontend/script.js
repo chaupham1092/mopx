@@ -1,4 +1,4 @@
-const apiUrl = 'https://mopx.onrender.com';  // Replace with Render URL
+const apiUrl = 'https://mopx.onrender.com/monkeypox-data';  // Replace with Render URL
 
 async function fetchData() {
     try {
